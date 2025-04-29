@@ -1,3 +1,2 @@
-#main method, arg parse module 
-#with error handling 
+#main method
 #command line parsing 
