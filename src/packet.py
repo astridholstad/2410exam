@@ -2,6 +2,7 @@
 #parsing
 #packet construction
 import struct
+import 
 
 class Packet:
     """this class is representing a DRTP packet"""
@@ -61,7 +62,7 @@ class Packet:
         return header + self.data
     
     @classmethod
-    def convert_from_b(byte, packet_bytes):
+    def convert_from_b(cls, packet_bytes):
         """
         this class method create a packet object from the reveiced bytes 
         it returns the object by
@@ -80,7 +81,7 @@ class Packet:
         data = packet_bytes[8:] if len(packet_bytes) > 8 else b''
         #data is extraced if there are any 
 
-        return byte(seq_num, ack_num, flags, recv_window, data)
+        return cls(seq_num, ack_num, flags, recv_window, data)
 
 
         

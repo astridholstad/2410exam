@@ -16,5 +16,47 @@ class DRTP:
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) #note: using sock.dgram which is udp. will build my application on top of this, more on this later.
         self.timeout = 0.4 #default 400 ms timeout
         self.socket.settimeout(self.timeout)
+
+        #the current connection state
+        self.connection = False
+        self.seq_num = 0 #current sequence number 
+        self.ack_num = 0 current ack number
+
+
+    def send_packet(self, packet, dest_addr):
+        """
+        This method sends a packet to a spesified destination address
+        """   
+        packet_bytes =  packet.convert_to_b()
+        self.socket.sendto(packet_bytes, dest_addr)
+
+    def receive_packet(self):
+        """
+        This method recieves a packet from the socket
+        uses a try catch method, returns the packet and address
+        If timeout, it returns nothing
+        """   
+        try:
+            data, addr = self.socket.recvfrom(1024) #buffersize is 1024 bytes
+            packet = Packet.convert_to_b(data) #calls convertion method from packet, and returns a new packet with the data 
+            return packet, addr
+        except:
+            socket.timeout:
+            return None, None #returns ether packet nor address if timeout
+        
+
+    def close_socket(self):
+        """
+        this method closes the socket after a connection
+        """    
+        if self.socket:
+            self.socket.close() #calls close function 
+
+
+
+
+
+
+
         
     
