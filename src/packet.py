@@ -1,8 +1,7 @@
 #error handling, validation
-#parsing
-#packet construction
+#packet construction and parsing 
 import struct
-import 
+
 
 class Packet:
     """this class is representing a DRTP packet"""

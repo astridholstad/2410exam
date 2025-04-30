@@ -14,7 +14,7 @@ class DRTP:
         self.ip = ip
         self.port = port
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) #note: using sock.dgram which is udp. will build my application on top of this, more on this later.
-        self.timeout = 0.4 #default 400 ms timeout
+        self.timeout = 0.4 #default 400 ms timeout, will use this for packet loss 
         self.socket.settimeout(self.timeout)
 
         #the current connection state
