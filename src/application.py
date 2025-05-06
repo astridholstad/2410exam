@@ -13,6 +13,8 @@ def parse_args():
     """
     parser = argparse.ArgumentParser(description="DRTP File Transfer Application")
 
+    # need to write what mode we want the application to be in. 
+
     #common command line args 
     parser.add_argument('-i', '--ip', type=str, default='127.0.0.1', help='IP address')
     parser.add_argument('-p', '--port', type=int, default=8080, help='Port number')
@@ -25,12 +27,20 @@ def parse_args():
     parser.add_argument('-d', '--discard', type=int, help='Sequence number to discard')
     parser.add_argument()
 
+    args = parser.parse_args()
+
+    # need to validate args here 
+
+
 
 def main():
     """
     Main method for this application 
 
+
     """    
+    args = parse_args()
+
     
 
 
