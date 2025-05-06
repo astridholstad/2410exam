@@ -7,6 +7,7 @@ class Packet:
     """this class is representing a DRTP packet"""
 
     #set the flag constants
+    #unsure of this part 
     SYN_flag = 0b0010
     ACK_flag = 0b0001
     FIN_flag = 0b0100
