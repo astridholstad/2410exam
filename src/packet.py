@@ -10,6 +10,7 @@ class Packet:
     SYN_flag = 0b0010
     ACK_flag = 0b0001
     FIN_flag = 0b0100
+    RESET_flag = 0b0000 #? need to find out what to do with this 
 
     def __init__(self, seq_num=0, ack_num=0, flags= 0, recv_window=0, data=b''):
         """
