@@ -5,9 +5,6 @@ from .packet import Packet
 import datetime
 import time
 
-
-
-
 class Server:
     """
     This will be used to initialze the reciever with a window size 
@@ -134,7 +131,7 @@ class Server:
                 elif packet.seq_num > self.expct_seq_num:
                     print(f"{datetime.datetime.now()}  - Out of order packcet: {packet.seq_num} is recieved. Expecting: {self.expct_seq_num}")
                      #now buffer the packet
-                     self.buffer[packet.seq_num] = packet.data
+                    self.buffer[packet.seq_num] = packet.data
                     #send duplicate ack for last in order packet
                     ack = Packet(ack_num=self.expct_seq_num-1, flags=Packet.ACK_flag)
                     self.send_packet(ack, addr)

@@ -26,7 +26,7 @@ def parse_args():
 
     #command line args for server spesific functionality 
     parser.add_argument('-d', '--discard', type=int, help='Sequence number to discard (Test)')
-    
+
     #common command line args 
     parser.add_argument('-i', '--ip', type=str, default='127.0.0.1', help='IP address')
     parser.add_argument('-p', '--port', type=int, default=8080, help='Port number')
@@ -36,8 +36,7 @@ def parse_args():
     # need to validate args here 
 
     if args.client and not args.file:
-        parser.error(#Client mode requiers -f for file)
-            
+        parser.error(#Client mode requiers -f for file)      
     return args       
 
 
@@ -61,7 +60,7 @@ def main():
             client.send_file(args.file)
 
             
-   except KeyboardInterrupt:
+    except KeyboardInterrupt:
         print("\nApplication terminated by user")
         sys.exit(0)
     except Exception as e:
