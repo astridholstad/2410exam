@@ -76,7 +76,80 @@ class Client:
             return
         
 
+    def send_data(self, file):
+        """
+        Here i will implement go back n stradegy for sending the data 
+
+        """    
+        print("data transfer:")
+
+        #firsty, read file in chunks and send
+
+        while True:
+            #wee need to check if the window is full, and if not we send packet
+            while self.next_seq_number < self.base_seq_number + self.window_size:
+                data = file.read(992) #992 bytes per packet we send
+                if not data:
+                    break #end of file....
+
+
+                #create a new packet, calling packet class, and send next packet
+                packet = Packet(seq_num=self.next_seq_number, data=data) #using now the next seqnr
+                self.send_packet(Packet, self.server_addr) #to the server
+
+                #while transmission, we need to track packets for in case of retransmission
+                self.packets_in_flight[self.next_seq_number] = packet #using a list 
+
+                window = list(range(self.base_seq_number, min(self.base_seq_number + self.window_size, + self.next_seq_number + 1))) 
+                #list of the window, with a range from what it is to the minimum
+                print(f"{datetime.datetime.now()} - packet with SEQ nr= {self.next_seq_number} is sent, sliding window now = {window}")
+                #printing the status now as we go
+
+                #update seqnr also
+                self.next_seq_number += 1
+
+            try:
+                #now we will try to recieve the acks
+                packet, _ = self.recieve_packet()
+                if packet and packet.check_ack():
+                    self.base_seq_number = packet.ack_num + 1 # updating the acks
+                    print(f"{datetime.datetime.now()} - ACK for packet = {packet.ack_num} is now recieved")
+
+                    #we can now remove the acked packets, as they have been sendt
+                    for _seq in list(self.packets_in_flight.keys()):#using iterable 
+                        if _seq <= packet.ack_num:
+                            del self.packets_in_flight[_seq] #delete
+
+            except socket.timeout:
+                #we now need to handle timeout
+                #this will re-transmit all of the packets, if occured
+                print(f"{datetime.datetime.now()} - TIMEOUT. Retransmitting window")
+
+                for seq_num in range(self.base_seq_number, self.next_seq_number):
+                    if seq_num in self.packets_in_flight:
+                        self.send_packet(self.packets_in_flight[seq_num], self.server_addr)
+                        print(f"{datetime.datetime.now()} - Restransmitting packet : {seq_num}")
+
+            #checking if data transfer is complete
+            if not data and not self.packets_in_flight: #is there any data in flight?
+                break
+
+        print("Data transmission finished")
+        self.teardown_connection()
+    
+    def teardown_connection():
         
+
+
+
+
+
+
+
+
+
+
+
 
         
 
