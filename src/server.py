@@ -13,10 +13,7 @@ class Server:
     This will be used to initialze the reciever with a window size 
     DRTP implementation of the server (the reviecer of the file)
     The server need to handle ip, port, sliding window, file data, discarded sequence numbers. 
-
-
     """
-
     def __init__(self, ip, port, window_size=15, discarded_seq=None):
         """
         Constructor for the client with a set window size
@@ -138,12 +135,11 @@ class Server:
                     print(f"{datetime.datetime.now()}  - Out of order packcet: {packet.seq_num} is recieved. Expecting: {self.expct_seq_num}")
                      #now buffer the packet
                      self.buffer[packet.seq_num] = packet.data
-                    
                     #send duplicate ack for last in order packet
                     ack = Packet(ack_num=self.expct_seq_num-1, flags=Packet.ACK_flag)
                     self.send_packet(ack, addr)
                     print(f"{datetime.datetime.now()} - sending last ack nr for {self.expct_seq_num-1}")
-                    
+
 
 
 
