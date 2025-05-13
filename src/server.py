@@ -61,7 +61,79 @@ class Server:
                     self.client_addr = client_addr
                     return client_addr
                 
-    def             
+    def receive_file(self, out_file):
+        """
+        This method recieve a file from the client
+
+        """        
+        #check firstly if we have a connection est.
+        if not self.connected:
+            client_addr = self.wait_for_handshake()
+
+        #then we need to prepare time and total bytes, before we recieve any data
+        start_time = time.time()
+        tot_bytes = 0 #beginning with 0
+
+        #open file with writing!!!
+        
+        with open(out_file, 'wb') as file:
+            while self.connected: #while connection is est..
+                packet, addr = self.recieve_packet()
+
+                #check for fin packet
+                if packet and packet.check_fin():
+                    print("FIN packet is recieved")
+
+                    #Send FIN-ACK
+                    fin_ack = Packet(flags=Packet.FIN_flag | Packet.ACK_flag)
+                    self.send_packet(fin_ack, addr)
+                    print("FIN ACK is sent")
+
+                    #calculate throughput and display it
+                    used_time = time.time() - start_time
+                    throughput = (tot_bytes * 8) / (used_time / 1000000)
+                    print(f"The throughput is: {throughput:.2f} Mbps")
+                    print("Connection closes")
+
+                    self.connected= False
+                    break
+
+                #we have now recieved the data, and now we need to process it
+
+
+                elif packet:
+
+                    #FOR TESTING PURPOSES: check if we should discard the packet
+                    if self.discarded_seq and packet.seq_num == self.discarded_seq and not self.discard_done:
+                        print(f"{datetime.datetime.now()} - Discarding packet: {packet.seq_num} (test)")
+                        self.discard_done = True #set flag to true
+                        continue
+
+                    #now we prosess the in- order packets
+                    if packet.seq_num == self.expct_seq_num:
+                        print(f"{datetime.datetime.now()} - packet: {packet.seq_num} is recieved")
+
+                        #write data to the file
+                        if packet.data:
+                            file.write(packet.data)
+                            tot_bytes += len(packet.data)
+
+                        #send ack
+                        ack = Packet(ack_num=self.expct_seq_num, flags=Packet.ACK_flag)
+                        self.send_packet(ack, addr)
+                        print(f"{datetime.datetime.now()} - sending ack for the recieved {self.expct_seq_num}")
+
+                        #update the expected sequencenr
+                        self.expct_seq_num += 1
+
+                        #check in the buffer for packets
+                        
+
+
+
+
+
+                
 
 
     
