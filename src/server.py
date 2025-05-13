@@ -127,7 +127,24 @@ class Server:
                         self.expct_seq_num += 1
 
                         #check in the buffer for packets
-                        
+                        while self.expct_seq_num in self.buffer:
+                            data = self.buffer.pop(self.expct_seq_num)
+                            file.write(data)
+                            tot_bytes += len(data)
+                            self.expct_seq_num += 1 # and add
+
+                #out of order packets
+                elif packet.seq_num > self.expct_seq_num:
+                    print(f"{datetime.datetime.now()}  - Out of order packcet: {packet.seq_num} is recieved. Expecting: {self.expct_seq_num}")
+                     #now buffer the packet
+                     self.buffer[packet.seq_num] = packet.data
+                    
+                    #send duplicate ack for last in order packet
+                    ack = Packet(ack_num=self.expct_seq_num-1, flags=Packet.ACK_flag)
+                    self.send_packet(ack, addr)
+                    print(f"{datetime.datetime.now()} - sending last ack nr for {self.expct_seq_num-1}")
+                    
+
 
 
 
