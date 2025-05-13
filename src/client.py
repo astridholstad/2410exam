@@ -58,7 +58,27 @@ class Client:
 
 
 
-    def    
+    def send_file(self, filename):
+        """
+        Send a file
+        Using go back n
+        """
+        if not self.connected: #checks if we are connected to the server, or else estabish the connection
+            self.establish_connection()
+        
+        try:
+            file_size= os.path.getsize(filename)
+            with open(filename, 'rb') as file:
+                self.send_data(file)
+
+        except FileNotFoundError:
+            print(f"File {filename} not found")
+            return
+        
+
+        
+
+        
 
 
 
