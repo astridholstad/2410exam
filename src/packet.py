@@ -13,7 +13,7 @@ class Packet:
     FIN_flag = 0b0100
     RESET_flag = 0b0000 #? need to find out what to do with this 
 
-    def __init__(self, seq_num=0, ack_num=0, flags= 0, recv_window=0, data=b''):
+    def __init__(self, seq_num=0, ack_num=0, flags= 0, recv_window=0, data=b''): 
         """
         This method is used as a constuctor of the objects of this class.
         this is a packet with the needed headers and data
@@ -22,7 +22,7 @@ class Packet:
         """
         self.seq_num = seq_num
         self.ack_num = ack_num
-        self.flags = flags
+        self.flags = flags & 0b1110 #this ensures that the rst flag is allways set to zero. 
         self.recv_window = recv_window
         self.data = data
 
