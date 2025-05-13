@@ -35,7 +35,33 @@ class Server:
     def wait_for_handshake(self):
         """
         Wait for client to perform a three way handshake
-        
+        Connecting the server to the client
+
         """
+        print("Waiting for client to connect...")
+
+        #firstly we wait for SYN to be recieved
+
+        while True:
+            packet, client_addr = self.recieve_packet()
+            if packet and packet.check_syn():
+                print("SYN packet is recieved")
+
+                #send SYN-ACK
+                syn_ack = Packet(seq_num=0, ack_num=0, flags=Packet.SYN_flag | Packet.ACK_flag, recv_window=self.recv_window)
+                self.send_packet(syn_ack, client_addr) #to the client 
+                print("SYN-ACK is sent")
+
+                #then we wait for ACK
+                packet, _ = self.receive_packet()
+                if packet and packet.check_ack():
+                    print("ACK packet is received")
+                    print("Connection to client is establised")
+                    self.connected = True
+                    self.client_addr = client_addr
+                    return client_addr
+                
+    def             
+
 
     
