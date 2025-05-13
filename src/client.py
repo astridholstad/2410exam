@@ -39,7 +39,27 @@ class Client:
         #now, we need to wait for the corresponding ack 
         while True:
             packet, addr = self.recieve_packet()
-            
+            if packet and packet.check_syn() and packet.check_ack(): #this checks if the syn and ack flags are set
+                print("SYN packet is sent")
+
+                #now we need to add to the window size, based on the servers window
+                self.window_size =min(self.max_window_size, packet.recv_window) #calls from packet
+
+                #now we need to send a acknowledgement
+                #make a new ack packet
+
+                ACK_packet = Packet(seq_num=1,ack_num=1, flags=Packet.ACK_flag) #send base (first) ack
+                self.send_packet(ACK_packet, self.server_addr) #to the server
+                print("ACK is sent")
+                print("Connection is establised")
+
+                self.connected = True
+                break
+
+
+
+    def    
+
 
 
 
