@@ -138,7 +138,32 @@ class Client:
         self.teardown_connection()
     
     def teardown_connection():
+        """
+        Here i will implement a two way handshake
+        this will close the connection
+
+        """
+        print("Connection teardown: ")
+
+        #send a FIN packet
+        fin_packet = Packet(flags=Packet.FIN_flag)
+        self.send_packet(fin_packet, self.server_addr)
+        print("FIN is sent")
+
+        #Check if FIN-ACK is recv
+
+        while True:
+            packet, _ = self.recieve_packet()
+            if packet and packet.check_fin() and packet.check_ack():
+                print("FIN ACK is received")
+                self.connected = False
+                break
+
+        print("Connection closing...")    
         
+
+
+
 
 
 
