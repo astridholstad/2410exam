@@ -4,6 +4,8 @@
 import argparse
 import sys
 import os
+from .client import Client
+from .server import Server
 
 def parse_args():
     """
@@ -31,6 +33,11 @@ def parse_args():
 
     # need to validate args here 
 
+    if args.client and not args.file:
+        parser.error(#Client mode requiers -f for file)
+            
+    return args       
+
 
 
 def main():
@@ -38,8 +45,29 @@ def main():
     Main method for this application 
 
 
-    """    
+    """  
     args = parse_args()
+
+    try:
+        if args.server:
+        #servermode
+            server = Server(args.ip, args.port, discarded_seq=args.discard)
+            out_file="file.txt"
+            server.recieve_file(out_file)
+
+        elif args.client:
+            
+        
+         
+            
+        
+        
+        
+
+
+        
+
+    
 
     
 
