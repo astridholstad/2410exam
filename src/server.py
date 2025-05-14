@@ -133,14 +133,3 @@ class Server(DRTP):
                     ack = Packet(ack_num=self.expct_seq_num-1, flags=Packet.ACK_flag)
                     self.send_packet(ack, addr)
                     print(f"{datetime.datetime.now()} - sending last ack nr for {self.expct_seq_num-1}")
-
-
-
-
-
-
-
-                
-
-
-    
