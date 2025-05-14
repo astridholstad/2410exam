@@ -1,11 +1,11 @@
 #server functionality class
 import os
-from .DRTP_protocol import DRTP
-from .packet import Packet
+from drtp_protocol import DRTP
+from packet import Packet
 import datetime
 import time
 
-class Server:
+class Server(DRTP):
     """
     This will be used to initialze the reciever with a window size 
     DRTP implementation of the server (the reviecer of the file)

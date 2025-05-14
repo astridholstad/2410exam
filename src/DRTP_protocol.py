@@ -1,7 +1,8 @@
 #common (core) functionality 
 import socket
 import time
-from .packet import Packet
+import os
+from packet import Packet
 
 class DRTP:
     """
@@ -20,7 +21,7 @@ class DRTP:
         #the current connection state
         self.connection = False
         self.seq_num = 0 #current sequence number 
-        self.ack_num = 0 current ack number
+        self.ack_num = 0 #current ack number
 
 
     def send_packet(self, packet, dest_addr):
@@ -41,7 +42,7 @@ class DRTP:
             packet = Packet.convert_to_b(data) #calls convertion method from packet, and returns a new packet with the data 
             return packet, addr
         except:
-            socket.timeout:
+            socket.timeout = 0
             return None, None #returns ether packet nor address if timeout
         
 

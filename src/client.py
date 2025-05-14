@@ -1,13 +1,13 @@
 #client functionality class. 
 
 import os
-from DRTP_protocol import DRTP
+from drtp_protocol import DRTP
 from packet import Packet
 import datetime
 
 
 
-class Client:
+class Client(DRTP):
     """
     This class handles the sender of the file. 
     I will implement a three way handshake to est. connection. 

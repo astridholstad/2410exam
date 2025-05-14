@@ -4,8 +4,8 @@
 import argparse
 import sys
 import os
-from .client import Client
-from .server import Server
+from client import Client
+from server import Server
 
 def parse_args():
     """
@@ -36,7 +36,7 @@ def parse_args():
     # need to validate args here 
 
     if args.client and not args.file:
-        parser.error(#Client mode requiers -f for file)      
+        parser.error #Client mode requiers -f for file    
     return args       
 
 
