@@ -4,7 +4,7 @@ import time
 import os
 from packet import Packet
 
-class DRTP():
+class drtp():
     """
     This class will represent the base for the DRTP protocol implementation
     """
@@ -17,6 +17,7 @@ class DRTP():
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) #note: using sock.dgram which is udp. will build my application on top of this, more on this later.
         self.timeout = 0.4 #default 400 ms timeout, will use this for packet loss 
         self.socket.settimeout(self.timeout)
+        print(f"Socket timeout set to: {self.socket.gettimeout()} seconds")
 
         #the current connection state
         self.connected = False
@@ -34,6 +35,8 @@ class DRTP():
             print(f"Error sending packet: {e}")
 
     def receive_packet(self):
+        
+        
         print("receive_packet called with no extra arguments")
         """
         This method receives a packet from the socket
@@ -41,14 +44,21 @@ class DRTP():
         If timeout, it returns none
         """
         try:
+            print("About to call socket.recvfrom")
             data, addr = self.socket.recvfrom(1024) #buffersize is 1024 bytes
             if data:
+                print("Converting data to packet")
                 packet = Packet.convert_from_b(data) #calls convertion method from packet, and returns a new packet with the data 
-                return packet, addr
+                print("hei")
+                return packet, addr 
+            
+            
             return None, None
         except socket.timeout:
+            print("Socket timeout occurred")
             return None, None #returns ether packet nor address if timeout
         except Exception as e:
+            
             print(f"Error setting timeout: {e}")
             return None, None
     def close_socket(self):

@@ -1,11 +1,11 @@
 import os
-from drtp_protocol import DRTP
+from drtp_protocol import drtp
 from packet import Packet
 import datetime
 import time
 from socket import *
 
-class Server(DRTP):
+class Server(drtp):
     """
     This will be used to initialze the reciever with a window size 
     DRTP implementation of the server (the reviecer of the file)
@@ -37,7 +37,7 @@ class Server(DRTP):
         #firstly we wait for SYN to be recieved
 
         while True:
-            packet, client_addr = self.receive_packet()
+            packet, client_addr = super().receive_packet()
             if packet and packet.check_syn():
 
                 print("SYN packet is recieved")
@@ -48,7 +48,7 @@ class Server(DRTP):
                 print("SYN-ACK is sent")
 
                 #then we wait for ACK
-                packet, _ = self.receive_packet()
+                packet, _ = super().receive_packet()
                 if packet and packet.check_ack():
                     print("ACK packet is received")
                     print("Connection to client is establised")
@@ -73,7 +73,7 @@ class Server(DRTP):
         
         with open(file_name, 'wb') as file:
             while self.connected: #while connection is est..
-                packet, addr = self.receive_packet()
+                packet, addr = super().receive_packet()
 
                 #check for fin packet
                 if packet and packet.check_fin():

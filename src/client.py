@@ -1,10 +1,10 @@
 import os
-from drtp_protocol import DRTP
+from drtp_protocol import drtp
 from packet import Packet
 import datetime
 import socket
 
-class Client(DRTP):
+class Client(drtp):
     """
     This class handles the sender of the file. 
     I will implement a three way handshake to est. connection. 
@@ -35,7 +35,7 @@ class Client(DRTP):
 
         #now, we need to wait for the corresponding ack 
         while True:
-            packet, addr = self.receive_packet()
+            packet, addr = super().receive_packet()
             if packet and packet.check_syn() and packet.check_ack(): #this checks if the syn and ack flags are set
                 print("SYN packet is sent")
 
@@ -97,7 +97,7 @@ class Client(DRTP):
                 self.next_seq_number += 1
             try:
                 #now we will try to recieve the acks
-                packet, _ = self.receive_packet()
+                packet, _ = super().receive_packet()
                 if packet and packet.check_ack():
                     ack_num = packet.ack_num
                     self.base_seq_number = packet.ack_num + 1 # updating the acks
@@ -138,7 +138,7 @@ class Client(DRTP):
         #Check if FIN-ACK is recv
 
         while True:
-            packet, _ = self.receive_packet()
+            packet, _ = super().receive_packet()
             if packet and packet.check_fin() and packet.check_ack():
                 print("FIN ACK is received")
                 self.connected = False

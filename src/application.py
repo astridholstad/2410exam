@@ -36,7 +36,7 @@ def parse_args():
     # need to validate args here 
 
     if args.client and not args.file:
-        parser.error #Client mode requiers -f for file    
+        parser.error("Client mode requiers -f for file ")
     return args       
 
 def main():
@@ -49,8 +49,7 @@ def main():
         if args.server:
         #server mode
             server = Server(args.ip, args.port, discarded_seq=args.discard)
-            out_file="file.txt"
-            server.receive_packet(out_file)
+            server.receive_packet()
 
         elif args.client:
         #client mode
