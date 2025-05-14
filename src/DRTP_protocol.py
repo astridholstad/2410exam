@@ -40,8 +40,7 @@ class DRTP:
             data, addr = self.socket.recvfrom(1024) #buffersize is 1024 bytes
             packet = Packet.convert_to_b(data) #calls convertion method from packet, and returns a new packet with the data 
             return packet, addr
-        except:
-            socket.timeout = 0
+        except socket.timeout:
             return None, None #returns ether packet nor address if timeout
         
 

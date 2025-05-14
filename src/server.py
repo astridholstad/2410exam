@@ -88,7 +88,7 @@ class Server(DRTP):
                     print(f"The throughput is: {throughput:.2f} Mbps")
                     print("Connection closes")
 
-                    self.connected= False
+                    self.connected = False
                     break
 
                  #we have now recieved the data, and now we need to process it

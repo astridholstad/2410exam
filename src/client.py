@@ -2,6 +2,7 @@ import os
 from drtp_protocol import DRTP
 from packet import Packet
 import datetime
+import socket
 
 class Client(DRTP):
     """
