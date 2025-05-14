@@ -64,20 +64,24 @@ class Packet:
         it returns the object by
         It cheks if the packet is allowed 
         """
-        if len(packet_bytes) < 8:
-            #8 is minimum size of revieved header
-            raise ValueError("Pakcet is too small to contain header")
-        #unpack the header
-        header = struct.unpack('!HHHH', packet_bytes[:8])
-        #the 'struct.unpack function' unpacks the packet_bytes according to !HHHH. 
-        #the struct.unpack function allways returns a tuple, which is similar to lists but elements are unchangeable. 
-        #the header must allways match the byte size of 8. 
-        seq_num, ack_num, flags, recv_window = header
+        try:
+            if len(packet_bytes) < 8:
+                #8 is minimum size of revieved header
+                print("Pakcet is too small to contain header")
+                return None
+            #unpack the header
+            header = struct.unpack('!HHHH', packet_bytes[:8])
+            #the 'struct.unpack function' unpacks the packet_bytes according to !HHHH. 
+            #the struct.unpack function allways returns a tuple, which is similar to lists but elements are unchangeable. 
+            #the header must allways match the byte size of 8. 
+            seq_num, ack_num, flags, recv_window = header
 
-        data = packet_bytes[8:] if len(packet_bytes) > 8 else b''
-        #data is extraced if there are any 
-
-        return cls(seq_num, ack_num, flags, recv_window, data)
+            data = packet_bytes[8:] if len(packet_bytes) > 8 else b''
+            #data is extraced if there are any 
+            return cls(seq_num, ack_num, flags, recv_window, data)
+        except Exception as e:
+            print(f"Error converting bytes to packet: {e}")
+            return None
 
 
         

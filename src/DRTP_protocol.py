@@ -4,7 +4,7 @@ import time
 import os
 from packet import Packet
 
-class DRTP(Packet):
+class DRTP():
     """
     This class will represent the base for the DRTP protocol implementation
     """
@@ -19,7 +19,7 @@ class DRTP(Packet):
         self.socket.settimeout(self.timeout)
 
         #the current connection state
-        self.connection = False
+        self.connected = False
         self.seq_num = 0 #current sequence number 
         self.ack_num = 0 #current ack number
 
@@ -32,7 +32,9 @@ class DRTP(Packet):
             self.socket.sendto(packet_bytes, dest_addr)
         except Exception as e:
             print(f"Error sending packet: {e}")
+
     def receive_packet(self):
+        print("receive_packet called with no extra arguments")
         """
         This method receives a packet from the socket
         uses a try catch method, returns the packet and address
@@ -40,13 +42,15 @@ class DRTP(Packet):
         """
         try:
             data, addr = self.socket.recvfrom(1024) #buffersize is 1024 bytes
-            packet = Packet.convert_to_b(data) #calls convertion method from packet, and returns a new packet with the data 
-            return packet, addr
+            if data:
+                packet = Packet.convert_from_b(data) #calls convertion method from packet, and returns a new packet with the data 
+                return packet, addr
+            return None, None
         except socket.timeout:
             return None, None #returns ether packet nor address if timeout
         except Exception as e:
             print(f"Error setting timeout: {e}")
-            return None
+            return None, None
     def close_socket(self):
         """
         this method closes the socket after a connection
