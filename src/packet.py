@@ -5,9 +5,9 @@ import struct
 class Packet:
     """this class is representing a DRTP packet"""
     #set the flag constants
-    SYN_flag = 0b0010
-    ACK_flag = 0b0001
-    FIN_flag = 0b0100
+    SYN_flag = 0b0010 #2
+    ACK_flag = 0b0001 #1
+    FIN_flag = 0b0100 #4
     RESET_flag = 0b0000 #always 0
 
     def __init__(self, seq_num=0, ack_num=0, flags= 0, recv_window=0, data=b''): 
@@ -21,7 +21,7 @@ class Packet:
         self.ack_num = ack_num
         self.flags = flags & 0b1110 #this ensures that the rst flag is allways set to zero. 
         self.recv_window = recv_window
-        self.data = data
+        self.data = data 
 
     def check_syn(self):
         """

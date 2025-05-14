@@ -39,8 +39,6 @@ def parse_args():
         parser.error #Client mode requiers -f for file    
     return args       
 
-
-
 def main():
     """
     Main method for this application 
@@ -66,9 +64,6 @@ def main():
     except Exception as e:
         print(f"Error: {e}")
         sys.exit(1)
-        
-         
-            
 
 if __name__ == "__main__":
     main()

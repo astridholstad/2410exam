@@ -3,6 +3,7 @@ from drtp_protocol import DRTP
 from packet import Packet
 import datetime
 import time
+from socket import *
 
 class Server(DRTP):
     """
@@ -38,6 +39,7 @@ class Server(DRTP):
         while True:
             packet, client_addr = self.receive_packet()
             if packet and packet.check_syn():
+
                 print("SYN packet is recieved")
 
                 #send SYN-ACK
@@ -54,7 +56,7 @@ class Server(DRTP):
                     self.client_addr = client_addr
                     return client_addr
                 
-    def receive_file(self, out_file):
+    def receive_file(self, client_addr, file_name):
         """
         This method recieve a file from the client
 
@@ -69,7 +71,7 @@ class Server(DRTP):
 
         #open file with writing!!!
         
-        with open(out_file, 'wb') as file:
+        with open(file_name, 'wb') as file:
             while self.connected: #while connection is est..
                 packet, addr = self.receive_packet()
 
@@ -84,7 +86,7 @@ class Server(DRTP):
 
                     #calculate throughput and display it
                     used_time = time.time() - start_time
-                    throughput = (tot_bytes * 8) / (used_time / 1000000)
+                    throughput = (tot_bytes * 8) / (used_time * 1000000)
                     print(f"The throughput is: {throughput:.2f} Mbps")
                     print("Connection closes")
 
@@ -96,13 +98,13 @@ class Server(DRTP):
 
                     #FOR TESTING PURPOSES: check if we should discard the packet
                     if self.discarded_seq and packet.seq_num == self.discarded_seq and not self.discard_done:
-                        print(f"{datetime.datetime.now()} - Discarding packet: {packet.seq_num} (test)")
+                        print(f"{datetime.datetime.now()} -- Discarding packet: {packet.seq_num} (test)")
                         self.discard_done = True #set flag to true
                         continue
 
                     #now we prosess the in- order packets
                     if packet.seq_num == self.expct_seq_num:
-                        print(f"{datetime.datetime.now()} - packet: {packet.seq_num} is recieved")
+                        print(f"{datetime.datetime.now()} -- packet: {packet.seq_num} is recieved")
 
                         #write data to the file
                         if packet.data:
@@ -112,7 +114,7 @@ class Server(DRTP):
                         #send ack
                         ack = Packet(ack_num=self.expct_seq_num, flags=Packet.ACK_flag)
                         self.send_packet(ack, addr)
-                        print(f"{datetime.datetime.now()} - sending ack for the recieved {self.expct_seq_num}")
+                        print(f"{datetime.datetime.now()} -- sending ack for the recieved {self.expct_seq_num}")
 
                         #update the expected sequencenr
                         self.expct_seq_num += 1
@@ -124,12 +126,12 @@ class Server(DRTP):
                             tot_bytes += len(data)
                             self.expct_seq_num += 1 # and add
 
-                #out of order packets
-                elif packet.seq_num > self.expct_seq_num:
-                    print(f"{datetime.datetime.now()}  - Out of order packcet: {packet.seq_num} is received. Expecting: {self.expct_seq_num}")
-                     #now buffer the packet
-                    self.buffer[packet.seq_num] = packet.data
-                    #send duplicate ack for last in order packet
-                    ack = Packet(ack_num=self.expct_seq_num-1, flags=Packet.ACK_flag)
-                    self.send_packet(ack, addr)
-                    print(f"{datetime.datetime.now()} - sending last ack nr for {self.expct_seq_num-1}")
+                    #out of order packets
+                    elif packet.seq_num > self.expct_seq_num:
+                        print(f"{datetime.datetime.now()}  -- Out of order packcet: {packet.seq_num} is received. Expecting: {self.expct_seq_num}")
+                        #now buffer the packet
+                        self.buffer[packet.seq_num] = packet.data
+                         #send duplicate ack for last in order packet
+                        ack = Packet(ack_num=self.expct_seq_num-1, flags=Packet.ACK_flag)
+                        self.send_packet(ack, addr)
+                        print(f"{datetime.datetime.now()} -- sending last ack nr for {self.expct_seq_num-1}")
