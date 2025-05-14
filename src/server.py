@@ -1,4 +1,3 @@
-#server functionality class
 import os
 from drtp_protocol import DRTP
 from packet import Packet
@@ -37,7 +36,7 @@ class Server(DRTP):
         #firstly we wait for SYN to be recieved
 
         while True:
-            packet, client_addr = self.recieve_packet()
+            packet, client_addr = self.receive_packet()
             if packet and packet.check_syn():
                 print("SYN packet is recieved")
 
@@ -72,7 +71,7 @@ class Server(DRTP):
         
         with open(out_file, 'wb') as file:
             while self.connected: #while connection is est..
-                packet, addr = self.recieve_packet()
+                packet, addr = self.receive_packet()
 
                 #check for fin packet
                 if packet and packet.check_fin():
@@ -92,9 +91,7 @@ class Server(DRTP):
                     self.connected= False
                     break
 
-                #we have now recieved the data, and now we need to process it
-
-
+                 #we have now recieved the data, and now we need to process it
                 elif packet:
 
                     #FOR TESTING PURPOSES: check if we should discard the packet
@@ -129,7 +126,7 @@ class Server(DRTP):
 
                 #out of order packets
                 elif packet.seq_num > self.expct_seq_num:
-                    print(f"{datetime.datetime.now()}  - Out of order packcet: {packet.seq_num} is recieved. Expecting: {self.expct_seq_num}")
+                    print(f"{datetime.datetime.now()}  - Out of order packcet: {packet.seq_num} is received. Expecting: {self.expct_seq_num}")
                      #now buffer the packet
                     self.buffer[packet.seq_num] = packet.data
                     #send duplicate ack for last in order packet

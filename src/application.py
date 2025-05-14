@@ -52,7 +52,7 @@ def main():
         #server mode
             server = Server(args.ip, args.port, discarded_seq=args.discard)
             out_file="file.txt"
-            server.recieve_file(out_file)
+            server.receive_packet(out_file)
 
         elif args.client:
         #client mode

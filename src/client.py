@@ -1,11 +1,7 @@
-#client functionality class. 
-
 import os
 from drtp_protocol import DRTP
 from packet import Packet
 import datetime
-
-
 
 class Client(DRTP):
     """
@@ -38,7 +34,7 @@ class Client(DRTP):
 
         #now, we need to wait for the corresponding ack 
         while True:
-            packet, addr = self.recieve_packet()
+            packet, addr = self.receive_packet()
             if packet and packet.check_syn() and packet.check_ack(): #this checks if the syn and ack flags are set
                 print("SYN packet is sent")
 
@@ -56,8 +52,6 @@ class Client(DRTP):
                 self.connected = True
                 break
 
-
-
     def send_file(self, filename):
         """
         Send a file
@@ -70,29 +64,23 @@ class Client(DRTP):
             file_size= os.path.getsize(filename)
             with open(filename, 'rb') as file:
                 self.send_data(file)
-
         except FileNotFoundError:
             print(f"File {filename} not found")
-            return
-        
-
+            return 
+    
     def send_data(self, file):
         """
         Here i will implement go back n stradegy for sending the data 
 
         """    
         print("data transfer:")
-
-        #firsty, read file in chunks and send
-
+         #firsty, read file in chunks and send
         while True:
             #wee need to check if the window is full, and if not we send packet
             while self.next_seq_number < self.base_seq_number + self.window_size:
                 data = file.read(992) #992 bytes per packet we send
                 if not data:
                     break #end of file....
-
-
                 #create a new packet, calling packet class, and send next packet
                 packet = Packet(seq_num=self.next_seq_number, data=data) #using now the next seqnr
                 self.send_packet(Packet, self.server_addr) #to the server
@@ -110,7 +98,7 @@ class Client(DRTP):
 
             try:
                 #now we will try to recieve the acks
-                packet, _ = self.recieve_packet()
+                packet, _ = self.receive_packet()
                 if packet and packet.check_ack():
                     self.base_seq_number = packet.ack_num + 1 # updating the acks
                     print(f"{datetime.datetime.now()} - ACK for packet = {packet.ack_num} is now recieved")
@@ -119,7 +107,6 @@ class Client(DRTP):
                     for _seq in list(self.packets_in_flight.keys()):#using iterable 
                         if _seq <= packet.ack_num:
                             del self.packets_in_flight[_seq] #delete
-
             except socket.timeout:
                 #we now need to handle timeout
                 #this will re-transmit all of the packets, if occured
@@ -130,21 +117,20 @@ class Client(DRTP):
                         self.send_packet(self.packets_in_flight[seq_num], self.server_addr)
                         print(f"{datetime.datetime.now()} - Restransmitting packet : {seq_num}")
 
-            #checking if data transfer is complete
+             #checking if data transfer is complete
             if not data and not self.packets_in_flight: #is there any data in flight?
                 break
 
         print("Data transmission finished")
         self.teardown_connection()
     
-    def teardown_connection():
+    def teardown_connection(self):
         """
         Here i will implement a two way handshake
         this will close the connection
 
         """
         print("Connection teardown: ")
-
         #send a FIN packet
         fin_packet = Packet(flags=Packet.FIN_flag)
         self.send_packet(fin_packet, self.server_addr)
@@ -153,12 +139,11 @@ class Client(DRTP):
         #Check if FIN-ACK is recv
 
         while True:
-            packet, _ = self.recieve_packet()
+            packet, _ = self.receive_packet()
             if packet and packet.check_fin() and packet.check_ack():
                 print("FIN ACK is received")
                 self.connected = False
                 break
-
         print("Connection closing...")    
         
 

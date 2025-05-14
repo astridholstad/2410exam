@@ -23,7 +23,6 @@ class DRTP:
         self.seq_num = 0 #current sequence number 
         self.ack_num = 0 #current ack number
 
-
     def send_packet(self, packet, dest_addr):
         """
         This method sends a packet to a spesified destination address
@@ -33,7 +32,7 @@ class DRTP:
 
     def receive_packet(self):
         """
-        This method recieves a packet from the socket
+        This method receives a packet from the socket
         uses a try catch method, returns the packet and address
         If timeout, it returns nothing
         """   

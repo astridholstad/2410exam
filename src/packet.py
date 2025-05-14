@@ -2,16 +2,13 @@
 #packet construction and parsing 
 import struct
 
-
 class Packet:
     """this class is representing a DRTP packet"""
-
     #set the flag constants
-    #unsure of this part 
     SYN_flag = 0b0010
     ACK_flag = 0b0001
     FIN_flag = 0b0100
-    RESET_flag = 0b0000 #? need to find out what to do with this 
+    RESET_flag = 0b0000 #always 0
 
     def __init__(self, seq_num=0, ack_num=0, flags= 0, recv_window=0, data=b''): 
         """
@@ -30,7 +27,6 @@ class Packet:
         """
         This method is checking if SYN flag is set. 
         Returns flags and syn flag if bool is true.
-
         """
         return bool(self.flags & self.SYN_flag)
     
@@ -38,7 +34,6 @@ class Packet:
         """
         This method is checking if ACK flag is set. 
         Returns flags and ack flag if bool is true.
-
         """
         return bool(self.flags & self.ACK_flag)
     
