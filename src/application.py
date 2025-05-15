@@ -76,6 +76,7 @@ def main():
             client.send_file(args.file)
             print("File transmission complete")
 
+        
 
     except KeyboardInterrupt:
         print("\nApplication terminated by user")

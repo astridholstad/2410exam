@@ -104,88 +104,94 @@ class Client(drtp):
 
         
     def send_data(self, file):
-            """
-            Here i will implement go back n stradegy for sending the data 
 
-            """    
-            print("data transfer:")
+        """
+        Here I will implement go back n strategy for sending the data 
+        """    
+        print("Data transfer:")
+        print(f"Using window size: {self.window_size}")
 
-            data = file.read(992)
-            #firsty, read file in chunks and send
+        # Read first chunk of data
+        data = file.read(992)
+        file_position = 992 if data else 0
+        total_file_size = os.path.getsize(file.name)
+        
+        print(f"Total file size: {total_file_size} bytes")
+        
+        # Flag to track if we've reached end of file
+        end_of_file_reached = False
+        
+        # Main transfer loop
+        while data is not None or self.packets_in_flight:
+            # If we have data and window space, send packets
+            while data and len(self.packets_in_flight) < self.window_size: 
+                # Create and send packet
+                packet = Packet(seq_num=self.next_seq_number % 65536, data=data)
+                self.send_packet(packet, self.server_addr)
 
+                # Track for retransmission
+                self.packets_in_flight[self.next_seq_number % 65536] = packet
+                
+                # Log current window
+                in_flight_seqs = sorted(self.packets_in_flight.keys())
+                print(f"{datetime.datetime.now()} -- packet with SEQ nr= {self.next_seq_number % 65536} is sent, sliding window now = {in_flight_seqs}")
 
-            while data or self.packets_in_flight:
-                #wee need to check if the window is full, and if not we send packet
-                while data and self.next_seq_number < self.base_seq_number + self.window_size: 
-                    #create a new packet, calling packet class, and send next packet
-                    packet = Packet(seq_num=self.next_seq_number % 65536, data=data) #using now the next seqnr
-                    self.send_packet(packet, self.server_addr) #to the server
-
-                    #while transmission, we need to track packets for in case of retransmission
-                    self.packets_in_flight[self.next_seq_number % 65536] = packet #using a 
-
-                    start = self.base_seq_number % 65536
-                    end = self.next_seq_number % 65536
+                self.next_seq_number += 1
+                
+                # Read next chunk
+                data = file.read(992)
+                if data:
+                    file_position += len(data)
+                    # Print progress every 50 packets or so
+                    if self.next_seq_number % 50 == 0:
+                        print(f"Progress: {file_position}/{total_file_size} bytes ({file_position/total_file_size*100:.1f}%)")
+                else:
+                    print("Reached end of file. Waiting for all ACKs...")
+                    end_of_file_reached = True
             
-                    # Create a window list accounting for wrap-around
-                    window = []
-                    current = start
-                    while current != end:
-                        window.append(current)
-                        current = (current + 1) % 65536
-                    window.append(end)  # Add the end value
+            # If end of file reached and all packets acknowledged, we're done
+            if end_of_file_reached and not self.packets_in_flight:
+                print("All data sent and all packets acknowledged. Transfer complete.")
+                break
+            
+            try:
+                # Try to receive ACKs
+                packet, _ = super().receive_packet()
+                if packet and packet.check_ack():
+                    ack_num = packet.ack_num
+                    self.base_seq_number = packet.ack_num + 1
+                    print(f"{datetime.datetime.now()} - ACK for packet = {ack_num} is now received")
 
-
-                    in_flight_seqs = sorted(self.packets_in_flight.keys())    
-                    print(f"{datetime.datetime.now()} -- packet with SEQ nr= {self.next_seq_number % 65536} is sent, sliding window now = {in_flight_seqs}")
-
-                    self.next_seq_number += 1
-
+                    # Remove acknowledged packets
+                    for seq_num in list(self.packets_in_flight.keys()):
+                        if seq_num <= packet.ack_num:
+                            del self.packets_in_flight[seq_num]
                     
-
-                    # Read next chunk if we have more data to send
-                    if len(self.packets_in_flight) < self.window_size:
-                        new_data = file.read(992)
-                        if new_data:
-                            data = new_data
-                        else:
-                            data = None
+                    if self.packets_in_flight:
+                        print(f"Packets still in flight: {len(self.packets_in_flight)}")
+                    else:
+                        print("No packets in flight")
+                        
+                    # If end of file and all packets acknowledged, we're done
+                    if end_of_file_reached and not self.packets_in_flight:
+                        print("All packets acknowledged. Transfer complete.")
                         break
 
-                try:
-                    #now we will try to recieve the acks
-                    packet, _ = super().receive_packet()
-                    if packet and packet.check_ack():
-                        ack_num = packet.ack_num
-                        self.base_seq_number = packet.ack_num + 1 # updating the acks
-                        print(f"{datetime.datetime.now()} - ACK for packet = {ack_num} is now recieved")
-
-                        #we can now remove the acked packets, as they have been sendt
-                        for seq_num in list(self.packets_in_flight.keys()):#using iterable 
-                            if seq_num <= packet.ack_num:
-                                del self.packets_in_flight[seq_num] #delete
-                        # Read next chunk if we have space in the window
-
-                        if data is None and self.next_seq_number < self.base_seq_number + self.window_size:
-                            new_data = file.read(992)
-                            if new_data:
-                                data = new_data
-                except socket.timeout:
-                    #we now need to handle timeout
-                    #this will re-transmit all of the packets, if occured
+            except socket.timeout:
+                # Handle timeout
+                if self.packets_in_flight:
                     print(f"{datetime.datetime.now()} - TIMEOUT. Retransmitting window")
-
-                    for seq_num in range(self.base_seq_number, self.next_seq_number):
-                        if seq_num in self.packets_in_flight:
-                            self.send_packet(self.packets_in_flight[seq_num], self.server_addr)
-                            print(f"{datetime.datetime.now()} - Restransmitting packet : {seq_num}")
-
-                #checking if data transfer is complete
-                if not data and not self.packets_in_flight: #is there any data in flight?
+                    
+                    for seq_num in sorted(self.packets_in_flight.keys()):
+                        self.send_packet(self.packets_in_flight[seq_num], self.server_addr)
+                        print(f"{datetime.datetime.now()} - Retransmitting packet: {seq_num}")
+                elif end_of_file_reached:
+                    # If no packets in flight and end of file reached, we're done
+                    print("All packets acknowledged after timeout. Completing transfer.")
                     break
 
-            print("Data transmission finished")
-            self.teardown_connection()
+        print("Data transmission finished")
+        self.teardown_connection()
         
     def teardown_connection(self):
             
