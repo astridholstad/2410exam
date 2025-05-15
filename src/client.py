@@ -34,10 +34,11 @@ class Client(drtp):
         print("SYN packet is sent")
 
         #now, we need to wait for the corresponding ack 
-        while True:
+        attempts = 0
+        while attempts < 5: # try 5 times 
             packet, addr = super().receive_packet()
             if packet and packet.check_syn() and packet.check_ack(): #this checks if the syn and ack flags are set
-                print("SYN packet is sent")
+                print("SYN ack packet is sent")
 
                 #now we need to adjust to the window size, based on the servers window
                 self.window_size =min(self.max_window_size, packet.recv_window) #calls from packet
@@ -51,7 +52,15 @@ class Client(drtp):
                 print("Connection is establised")
 
                 self.connected = True
-                break
+                return True
+            attempts += 1
+            # Resend SYN if no response
+            if attempts % 2 == 0:
+                self.send_packet(syn_packet, self.server_addr)
+                print("Resending SYN packet")
+
+        print("Connection establishment failed")
+        return False       
 
     def send_file(self, filename):
         """
@@ -60,6 +69,8 @@ class Client(drtp):
         """
         if not self.connected: #checks if we are connected to the server, or else estabish the connection
             self.establish_connection()
+            print("Failed to establish connection")
+            return
         
         try:
             with open(filename, 'rb') as file:
@@ -79,15 +90,15 @@ class Client(drtp):
          #firsty, read file in chunks and send
 
 
-        while True:
+        while data or self.packets_in_flight:
             #wee need to check if the window is full, and if not we send packet
-            while self.next_seq_number < self.base_seq_number + self.window_size and data: 
+            while data and self.next_seq_number < self.base_seq_number + self.window_size: 
                 #create a new packet, calling packet class, and send next packet
                 packet = Packet(seq_num=self.next_seq_number, data=data) #using now the next seqnr
                 self.send_packet(packet, self.server_addr) #to the server
 
                 #while transmission, we need to track packets for in case of retransmission
-                self.packets_in_flight[self.next_seq_number] = packet #using a dict
+                self.packets_in_flight[self.next_seq_number] = packet #using a 
 
                 window = list(range(self.base_seq_number, min(self.base_seq_number + self.window_size, self.next_seq_number + 1))) 
                 #list of the window, with a range from what it is to the minimum
@@ -95,6 +106,16 @@ class Client(drtp):
                 #printing the status now as we go
                 #update seqnr also
                 self.next_seq_number += 1
+
+                # Read next chunk if we have more data to send
+                if self.next_seq_number < self.base_seq_number + self.window_size:
+                    new_data = file.read(992)
+                    if new_data:
+                        data = new_data
+                    else:
+                        data = None
+                        break
+
             try:
                 #now we will try to recieve the acks
                 packet, _ = super().receive_packet()
@@ -107,6 +128,12 @@ class Client(drtp):
                     for seq_num in list(self.packets_in_flight.keys()):#using iterable 
                         if seq_num <= packet.ack_num:
                             del self.packets_in_flight[seq_num] #delete
+                    # Read next chunk if we have space in the window
+
+                    if data is None and self.next_seq_number < self.base_seq_number + self.window_size:
+                        new_data = file.read(992)
+                        if new_data:
+                            data = new_data
             except socket.timeout:
                 #we now need to handle timeout
                 #this will re-transmit all of the packets, if occured
@@ -120,6 +147,7 @@ class Client(drtp):
              #checking if data transfer is complete
             if not data and not self.packets_in_flight: #is there any data in flight?
                 break
+
         print("Data transmission finished")
         self.teardown_connection()
     
@@ -137,12 +165,20 @@ class Client(drtp):
 
         #Check if FIN-ACK is recv
 
-        while True:
+        # Check if FIN-ACK is received
+        attempts = 0
+        while attempts < 5:  # Try 5 times
             packet, _ = super().receive_packet()
             if packet and packet.check_fin() and packet.check_ack():
-                print("FIN ACK is received")
+                print("FIN ACK packet is received")
                 self.connected = False
                 break
+
+            attempts += 1
+            if attempts % 2 == 0:
+                # Resend FIN if no response after 2 timeouts
+                self.send_packet(fin_packet, self.server_addr)
+                print("Resending FIN packet")
         print("Connection closing...")    
         
 

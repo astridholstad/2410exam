@@ -19,7 +19,7 @@ class Server(drtp):
         super().__init__(ip, port)
         self.recv_window= window_size
         self.expct_seq_num = 1 #next expected sequence number
-        self.buffer = {} #buffer to store data, as a dict
+        self.buffer = {} #buffer to store data
         self.discarded_seq = discarded_seq
         self.discard_done = False # flag that is T/F to check if discard have been done.
 
@@ -47,14 +47,24 @@ class Server(drtp):
                 self.send_packet(syn_ack, client_addr) #to the client 
                 print("SYN-ACK is sent")
 
+                ack_recieved = False
+                #try to get the ack 5 times, as it might be lost
+
+                for _ in range(5): 
                 #then we wait for ACK
-                packet, _ = super().receive_packet()
-                if packet and packet.check_ack():
-                    print("ACK packet is received")
-                    print("Connection to client is establised")
-                    self.connected = True
-                    self.client_addr = client_addr
+                    packet, _ = super().receive_packet()
+                    if packet and packet.check_ack():
+                        print("ACK packet is received")
+                        print("Connection to client is establised")
+                        self.connected = True
+                        self.client_addr = client_addr
+                        ack_recieved = True
+                        break
+                if ack_recieved:
                     return client_addr
+                else:
+                    print("Failed to receive ACK, terminating connection")
+                    return None
                 
     def receive_file(self, client_addr, file_name):
         """
@@ -64,6 +74,9 @@ class Server(drtp):
         #check firstly if we have a connection est.
         if not self.connected:
             client_addr = self.wait_for_handshake()
+            if not client_addr:
+                print("Could not establish connection")
+                return
 
         #then we need to prepare time and total bytes, before we recieve any data
         start_time = time.time()

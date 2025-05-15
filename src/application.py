@@ -34,6 +34,8 @@ def parse_args():
     args = parser.parse_args()
 
     # need to validate args here 
+    if args.port < 1024 or args.port > 65535:
+        parser.error("Port must be in the range [1024, 65535]")
 
     if args.client and not args.file:
         parser.error("Client mode requiers -f for file ")
@@ -49,14 +51,19 @@ def main():
         if args.server:
         #server mode
             server = Server(args.ip, args.port, discarded_seq=args.discard)
-            server.receive_packet()
+            client_addr = server.wait_for_handshake()
+            
+            output_filename = "received_file"
+            if args.file:
+                output_filename = args.file
+            server.receive_file(client_addr, output_filename)
 
-        elif args.client:
         #client mode
+        elif args.client:
+            
             client = Client(args.ip, args.port, args.window)
             client.send_file(args.file)
 
-            
     except KeyboardInterrupt:
         print("\nApplication terminated by user")
         sys.exit(0)
