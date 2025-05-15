@@ -55,11 +55,12 @@ class drtp():
                 return packet, addr 
             return None, None
         except socket.timeout:
-            return None, None #returns ether packet nor address if timeout
+            # Make sure this explicitly re-raises the timeout exception
+            raise
         except Exception as e:
-            print(f"Error setting timeout: {e}")
+            print(f"Error receiving packet: {e}")
             return None, None
-        
+
     def close_socket(self):
         """
         this method closes the socket after a connection
