@@ -28,43 +28,54 @@ class Server(drtp):
 
     def wait_for_handshake(self):
         """
-        Wait for client to perform a three way handshake
+        Wait for client to perform a three-way handshake
         Connecting the server to the client
-
-        """
+         """
         print("Waiting for client to connect...")
 
-        #firstly we wait for SYN to be recieved
-
+            # Wait for SYN packet
         while True:
-            packet, client_addr = super().receive_packet()
+            packet, client_addr = self.receive_packet()
             if packet and packet.check_syn():
-
-                print("SYN packet is recieved")
-
-                #send SYN-ACK
+                print(f"SYN packet is received from {client_addr}")
+                
+                # Send SYN-ACK
                 syn_ack = Packet(seq_num=0, ack_num=0, flags=Packet.SYN_flag | Packet.ACK_flag, recv_window=self.recv_window)
-                self.send_packet(syn_ack, client_addr) #to the client 
-                print("SYN-ACK is sent")
-
-                ack_recieved = False
-                #try to get the ack 5 times, as it might be lost
-
-                for _ in range(5): 
-                #then we wait for ACK
-                    packet, _ = super().receive_packet()
-                    if packet and packet.check_ack():
-                        print("ACK packet is received")
-                        print("Connection to client is establised")
-                        self.connected = True
-                        self.client_addr = client_addr
-                        ack_recieved = True
-                        break
-                if ack_recieved:
-                    return client_addr
-                else:
-                    print("Failed to receive ACK, terminating connection")
-                    return None
+                self.send_packet(syn_ack, client_addr)
+                print(f"SYN-ACK is sent to {client_addr}")
+                
+                # Wait for ACK with extended timeout
+                original_timeout = self.socket.gettimeout()
+                self.socket.settimeout(2.0)  # Extend timeout for ACK
+                
+                try:
+                    ack_received = False
+                    for attempt in range(5):
+                        try:
+                            packet, addr = self.receive_packet()
+                            print(f"DEBUG: Received packet from {addr}: {packet.flags if packet else None}")
+                            
+                            if packet and packet.check_ack():
+                                print("ACK packet is received")
+                                print("Connection to client is established")
+                                self.connected = True
+                                self.client_addr = client_addr
+                                ack_received = True
+                                break
+                        except Exception as e:
+                            print(f"DEBUG: Error waiting for ACK: {e}")
+                    
+                    if ack_received:
+                        # Reset timeout back to original
+                        self.socket.settimeout(original_timeout)
+                        return client_addr
+                    else:
+                        print("Failed to receive ACK, waiting for new connection...")
+                        # Reset timeout back to original
+                        self.socket.settimeout(original_timeout)
+                except Exception as e:
+                    print(f"DEBUG: Handshake error: {e}")
+                    self.socket.settimeout(original_timeout)
                 
     def receive_file(self, client_addr, file_name):
         """

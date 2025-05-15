@@ -19,7 +19,8 @@ class Packet:
         """
         self.seq_num = seq_num
         self.ack_num = ack_num
-        self.flags = flags & 0b1110 #this ensures that the rst flag is allways set to zero. 
+        #self.flags = flags & 0b0111 #this ensures that the rst flag is allways set to zero. 
+        self.flags = flags
         self.recv_window = recv_window
         self.data = data 
 
