@@ -16,7 +16,7 @@ class Client(drtp):
         """ This is the constructor of the client with a window size"""
         super().__init__(ip, port) #using inheritance 
         self.server_addr=(ip, port)
-        self.max_window_size = max(15, window_size) #SO IT CAN NEVER GO BELOW 15, EVEN WHEN IT IS PROVOCED WITH -W 20
+        self.max_window_size = window_size
         self.window_size = window_size #this needs to be adjustable to the client side
         self.base_seq_number = 1 #the starting number of the seqnr to the sliding window
         self.next_seq_number = 1 #the next seqnr to use
@@ -52,7 +52,9 @@ class Client(drtp):
                             print("SYN-ACK packet is received")
                         
                             # Adjust window size based on server's window
-                            self.window_size = min(self.max_window_size, packet.recv_window)
+                            server_window = packet.recv_window # can never go above 15
+
+                            self.window_size = min(self.max_window_size, server_window)
                             print(f"Window size adjusted to {self.window_size}")
                         
                             # Send ACK
