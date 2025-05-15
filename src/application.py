@@ -46,6 +46,8 @@ def main():
     Main method for this application 
     """  
     args = parse_args()
+    server = None
+    client = None
 
     try:
         if args.server:
@@ -54,22 +56,43 @@ def main():
             client_addr = server.wait_for_handshake()
             
             output_filename = "received_file"
+
             if args.file:
                 output_filename = args.file
-            server.receive_file(client_addr, output_filename)
 
-        #client mode
-        elif args.client:
+            if client_addr:
+                server.receive_file(client_addr, output_filename)    
+
+
             
+
+        elif args.client:
+        
+            #client mode
             client = Client(args.ip, args.port, args.window)
+            print(f"Client connecting to server at {args.ip}:{args.port}")
+            
+            # Send the file - this should include the handshake, data transfer and teardown
             client.send_file(args.file)
+            print("File transmission complete")
+
 
     except KeyboardInterrupt:
         print("\nApplication terminated by user")
-        sys.exit(0)
     except Exception as e:
         print(f"Error: {e}")
-        sys.exit(1)
+    finally:
+
+        # Clean up resources properly
+        if server:
+            
+            server.close_socket()
+            print("Server socket closed")
+        if client:
+            client.close_socket()
+            print("Client socket closed")
+
+
 
 if __name__ == "__main__":
     main()

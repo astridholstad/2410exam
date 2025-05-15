@@ -53,6 +53,9 @@ class Packet:
         The methos returns a header packed using struct 
         
         """
+        seq_num = self.seq_num & 0xFFFF
+        ack_num = self.ack_num & 0xFFFF
+
         header = struct.pack('!HHHH', self.seq_num, self.ack_num, self.flags, self.recv_window)
         #the "struct.pack" function returns a byte object containg the values i have sent in..
         #Packed in the format !HHHH where ! represents the network byte order and H is unsigned short for 2 integer which represents 16 bytes. 

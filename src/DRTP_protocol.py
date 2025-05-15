@@ -19,7 +19,9 @@ class drtp():
         self.socket.settimeout(self.timeout)
 
         
-        
+         # Create new socket with improved options
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
         #the current connection state
         self.connected = False
@@ -62,8 +64,14 @@ class drtp():
         """
         this method closes the socket after a connection
         """    
-        if self.socket:
-            self.socket.close() #calls close function 
+        if hasattr(self, 'socket') and self.socket:
+            try:
+                # Close the socket properly
+                self.socket.close()
+                self.socket = None
+                print("Socket properly closed")
+            except Exception as e:
+                print(f"Error closing socket: {e}") #calls close function 
 
 
 

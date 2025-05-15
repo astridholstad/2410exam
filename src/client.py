@@ -33,40 +33,52 @@ class Client(drtp):
         syn_packet = Packet(seq_num=0, flags=Packet.SYN_flag)
         self.send_packet(syn_packet, self.server_addr)
         print("SYN packet is sent")
+
+        original_timeout = self.socket.gettimeout()
+        
+
     
         # Wait for SYN-ACK response
         attempts = 0
         max_attempts = 5
-        while attempts < max_attempts:
-            try:
-                packet, addr = self.receive_packet()
-                print(f"DEBUG: Received packet with flags={packet.flags if packet else None} from {addr}")
+        try: 
+            while attempts < max_attempts:
+                try:
+                    packet, addr = self.receive_packet()
+                    if packet:
+                        print(f"Received packet with flags={packet.flags} from {addr}")
+                    
+                        if packet and packet.check_syn() and packet.check_ack():
+                            print("SYN-ACK packet is received")
+                        
+                            # Adjust window size based on server's window
+                            self.window_size = min(self.max_window_size, packet.recv_window)
+                            print(f"Window size adjusted to {self.window_size}")
+                        
+                            # Send ACK
+                            ack_packet = Packet(seq_num=1, ack_num=1, flags=Packet.ACK_flag)
+                            self.send_packet(ack_packet, self.server_addr)
+                            print("ACK packet is sent")
+                            print("Connection is established")
+                        
+                            self.connected = True
+                            self.socket.settimeout(original_timeout)
+                            return True
+                except socket.timeout:
+                    print(f"Timeout waiting for SYN-ACK (attempt {attempts+1}/{max_attempts})")
+                except Exception as e:
+                    print(f"Exception during handshake: {e}")
+
+                
+                # Increment attempts and maybe resend SYN
+                attempts += 1
+                if attempts < max_attempts:
+                    print(f"Retrying handshake (attempt {attempts}/{max_attempts})")
+                    self.send_packet(syn_packet, self.server_addr)
+        finally:
+            # Reset timeout to original
+            self.socket.settimeout(original_timeout)        
             
-                if packet and packet.check_syn() and packet.check_ack():
-                    print("SYN-ACK packet is received")
-                
-                    # Adjust window size based on server's window
-                    self.window_size = min(self.max_window_size, packet.recv_window)
-                    print(f"Window size adjusted to {self.window_size}")
-                
-                # Send ACK
-                    ack_packet = Packet(seq_num=1, ack_num=1, flags=Packet.ACK_flag)
-                    self.send_packet(ack_packet, self.server_addr)
-                    print("ACK packet is sent")
-                    print("Connection is established")
-                
-                    self.connected = True
-                    return True
-            except Exception as e:
-                print(f"DEBUG: Exception during handshake: {e}")
-        
-            # Increment attempts and maybe resend SYN
-            attempts += 1
-            if attempts < max_attempts:
-                print(f"Retrying handshake (attempt {attempts}/{max_attempts})")
-                self.send_packet(syn_packet, self.server_addr)
-                print("Resending SYN packet")
-    
         print("Connection establishment failed after multiple attempts")
         return False
 
@@ -80,7 +92,7 @@ class Client(drtp):
             success = self.establish_connection()
             if not success:
                 print("Failed to establish connection")
-            return
+                return #only return if not connected
         
         try:
             with open(filename, 'rb') as file:
@@ -106,27 +118,39 @@ class Client(drtp):
                 #wee need to check if the window is full, and if not we send packet
                 while data and self.next_seq_number < self.base_seq_number + self.window_size: 
                     #create a new packet, calling packet class, and send next packet
-                    packet = Packet(seq_num=self.next_seq_number, data=data) #using now the next seqnr
+                    packet = Packet(seq_num=self.next_seq_number % 65536, data=data) #using now the next seqnr
                     self.send_packet(packet, self.server_addr) #to the server
 
                     #while transmission, we need to track packets for in case of retransmission
-                    self.packets_in_flight[self.next_seq_number] = packet #using a 
+                    self.packets_in_flight[self.next_seq_number % 65536] = packet #using a 
 
-                    window = list(range(self.base_seq_number, min(self.base_seq_number + self.window_size, self.next_seq_number + 1))) 
-                    #list of the window, with a range from what it is to the minimum
-                    print(f"{datetime.datetime.now()} -- packet with SEQ nr= {self.next_seq_number} is sent, sliding window now = {window}")
-                    #printing the status now as we go
-                    #update seqnr also
+                    start = self.base_seq_number % 65536
+                    end = self.next_seq_number % 65536
+            
+                    # Create a window list accounting for wrap-around
+                    window = []
+                    current = start
+                    while current != end:
+                        window.append(current)
+                        current = (current + 1) % 65536
+                    window.append(end)  # Add the end value
+
+
+                    in_flight_seqs = sorted(self.packets_in_flight.keys())    
+                    print(f"{datetime.datetime.now()} -- packet with SEQ nr= {self.next_seq_number % 65536} is sent, sliding window now = {in_flight_seqs}")
+
                     self.next_seq_number += 1
 
+                    
+
                     # Read next chunk if we have more data to send
-                    if self.next_seq_number < self.base_seq_number + self.window_size:
+                    if len(self.packets_in_flight) < self.window_size:
                         new_data = file.read(992)
                         if new_data:
                             data = new_data
                         else:
                             data = None
-                            break
+                        break
 
                 try:
                     #now we will try to recieve the acks
