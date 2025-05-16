@@ -51,7 +51,7 @@ def main():
 
     try:
         if args.server:
-        #server mode
+            #server mode
             server = Server(args.ip, args.port, discarded_seq=args.discard)
             client_addr = server.wait_for_handshake()
             
@@ -63,34 +63,29 @@ def main():
             if client_addr:
                 server.receive_file(client_addr, output_filename)    
 
-
-            
-
         elif args.client:
-        
             #client mode
             client = Client(args.ip, args.port, args.window)
             print(f"Client connecting to server at {args.ip}:{args.port}")
             
             # Send the file - this should include the handshake, data transfer and teardown
-            client.send_file(args.file)
-            print("File transmission complete")
-
-        
+            success = client.send_file(args.file)
+            if success:
+                print("File transmission complete")
+            else:
+                print("File transmission failed")
 
     except KeyboardInterrupt:
         print("\nApplication terminated by user")
     except Exception as e:
         print(f"Error: {e}")
     finally:
-
         # Clean up resources properly
         if server:
-            
             server.close_socket()
             print("Server socket closed")
         if client:
-            client.close_socket()
+            client.close_socket() 
             print("Client socket closed")
 
 

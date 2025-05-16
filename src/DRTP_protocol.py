@@ -63,18 +63,19 @@ class drtp():
         
     def close_socket(self):
         """
-        this method closes the socket after a connection
+        This method closes the socket after a connection
         """    
         if hasattr(self, 'socket') and self.socket:
             try:
+                # Set connected to False to indicate we're no longer connected
+                self.connected = False
+                
                 # Close the socket properly
                 self.socket.close()
                 self.socket = None
                 print("Socket properly closed")
             except Exception as e:
-                print(f"Error closing socket: {e}") #calls close function 
-
-
+                print(f"Error closing socket: {e}")
 
 
 

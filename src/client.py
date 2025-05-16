@@ -31,18 +31,18 @@ class Client(drtp):
         Establish connection
         """
         
-            # First: send a syn packet
+        # First: send a syn packet
         syn_packet = Packet(seq_num=0, flags=Packet.SYN_flag)
         self.send_packet(syn_packet, self.server_addr)
         print("SYN packet is sent")
 
         original_timeout = self.socket.gettimeout()
+        self.socket.settimeout(2.0)  # Set a reasonable timeout for initial connection
         
-
-    
         # Wait for SYN-ACK response
         attempts = 0
         max_attempts = 5
+        
         try: 
             while attempts < max_attempts:
                 try:
@@ -70,20 +70,27 @@ class Client(drtp):
                             return True
                 except socket.timeout:
                     print(f"Timeout waiting for SYN-ACK (attempt {attempts+1}/{max_attempts})")
-                except Exception as e:
-                    print(f"Exception during handshake: {e}")
-
-                
+                except socket.error as e:
+                    print(f"Socket error: {e}")
+                    # For connection errors like "Connection refused", fail immediately 
+                    if e.errno in [111, 61, 10061]:  # Various connection refused error codes
+                        print(f"Server at {self.server_addr[0]}:{self.server_addr[1]} actively refused connection")
+                        return False
+                    
                 # Increment attempts and maybe resend SYN
                 attempts += 1
                 if attempts < max_attempts:
                     print(f"Retrying handshake (attempt {attempts}/{max_attempts})")
                     self.send_packet(syn_packet, self.server_addr)
+                else:
+                    print(f"Server at {self.server_addr[0]}:{self.server_addr[1]} is not responding after {max_attempts} attempts")
         finally:
             # Reset timeout to original
-            self.socket.settimeout(original_timeout)        
+            self.socket.settimeout(original_timeout)
             
-        print("Connection establishment failed after multiple attempts")
+        print("Connection establishment failed")
+        # Ensure we mark as disconnected
+        self.connected = False
         return False
 
 
@@ -229,7 +236,7 @@ class Client(drtp):
         self.socket.setblocking(True)
         print("Data transmission finished")
         self.teardown_connection()
-        
+
     def teardown_connection(self):
             
             """
