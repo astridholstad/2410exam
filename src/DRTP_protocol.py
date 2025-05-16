@@ -40,9 +40,6 @@ class drtp():
             print(f"Error sending packet: {e}")
 
     def receive_packet(self):
-        
-        
-        
         """
         This method receives a packet from the socket
         uses a try catch method, returns the packet and address
@@ -57,10 +54,13 @@ class drtp():
         except socket.timeout:
             # Make sure this explicitly re-raises the timeout exception
             raise
+        except BlockingIOError:
+            # This will be raised when using non-blocking sockets and no data is available
+            return None, None
         except Exception as e:
             print(f"Error receiving packet: {e}")
             return None, None
-
+        
     def close_socket(self):
         """
         this method closes the socket after a connection
