@@ -32,6 +32,8 @@ class Server(drtp):
         Wait for client to perform a three-way handshake
         """ 
         # Reset state for clean start
+
+        print("Waiting for client to connect..")
         self.connected = False
         self.expct_seq_num = 1
         self.buffer = {}
@@ -190,7 +192,7 @@ class Server(drtp):
                         
                         # Only send the ACK if we haven't already sent one for this sequence number
                         if (self.expct_seq_num-1) % 65536 != last_ack_sent:
-                            #send duplicate ack for last in order packet
+                            #send ack for last in order packet
                             ack = Packet(ack_num=(self.expct_seq_num-1) % 65536, flags=Packet.ACK_flag)
                             self.send_packet(ack, addr)
                             print(f"{datetime.datetime.now()} -- sending last ack nr for {self.expct_seq_num-1}")
@@ -198,4 +200,4 @@ class Server(drtp):
                             # Update the last ACK sent
                             last_ack_sent = (self.expct_seq_num-1) % 65536
                         else:
-                            print(f"{datetime.datetime.now()} -- NOT sending duplicate ACK for {self.expct_seq_num-1} (already sent)")
+                            print(f"{datetime.datetime.now()} -- {self.expct_seq_num-1} (already sent)")
