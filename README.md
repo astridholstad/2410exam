@@ -8,3 +8,11 @@
 python3 application.py -s -i 127.0.0.1 -p 8080
 
 python3 application.py -c -f iceland-safiqul.jpeg -i 127.0.0.1 -p 8080 -w 5
+
+
+
+
+
+
+to check if the file transfer is correct: diff iceland-safiqul.jpeg received_file
+
