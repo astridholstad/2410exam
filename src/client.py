@@ -249,7 +249,7 @@ class Client(drtp):
             """
             print("Connection teardown: ")
             #send a FIN packet
-            fin_packet = Packet(flags=Packet.FIN_flag)
+            fin_packet = Packet(flags=Packet.FIN_flag) #set flags
             self.send_packet(fin_packet, self.server_addr)
             print("FIN is sent")
 
