@@ -102,7 +102,6 @@ class Server(drtp):
     def receive_file(self, client_addr, file_name):
         """
         This method recieve a file from the client
-
         """        
         #check firstly if we have a connection est.
         print("debug:starting revieve file method")
@@ -112,11 +111,14 @@ class Server(drtp):
                 print("Could not establish connection")
                 return
             print("ready to recieve file")
+        
         #then we need to prepare time and total bytes, before we recieve any data
         start_time = time.time()
         tot_bytes = 0 #beginning with 0
         
-
+        # Track the last ACK sent to avoid duplicate ACKs
+        last_ack_sent = 0
+        
         #open file with writing!!!
         print(f"Opening file {file_name} for writing") 
         
@@ -145,7 +147,7 @@ class Server(drtp):
                     self.connected = False
                     break
 
-                 #we have now recieved the data, and now we need to process it
+                #we have now recieved the data, and now we need to process it
                 elif packet:
 
                     #FOR TESTING PURPOSES: check if we should discard the packet
@@ -167,6 +169,9 @@ class Server(drtp):
                         ack = Packet(ack_num=self.expct_seq_num % 65536, flags=Packet.ACK_flag)
                         self.send_packet(ack, addr)
                         print(f"{datetime.datetime.now()} -- sending ack for the recieved {self.expct_seq_num}")
+                        
+                        # Update the last ACK sent
+                        last_ack_sent = self.expct_seq_num % 65536
 
                         #update the expected sequencenr
                         self.expct_seq_num += 1
@@ -183,7 +188,15 @@ class Server(drtp):
                         print(f"{datetime.datetime.now()}  -- Out of order packcet: {packet.seq_num} is received. Expecting: {self.expct_seq_num}")
                         #now buffer the packet
                         self.buffer[packet.seq_num] = packet.data
-                         #send duplicate ack for last in order packet
-                        ack = Packet(ack_num=(self.expct_seq_num-1) % 65536, flags=Packet.ACK_flag)
-                        self.send_packet(ack, addr)
-                        print(f"{datetime.datetime.now()} -- sending last ack nr for {self.expct_seq_num-1}")
+                        
+                        # Only send the ACK if we haven't already sent one for this sequence number
+                        if (self.expct_seq_num-1) % 65536 != last_ack_sent:
+                            #send duplicate ack for last in order packet
+                            ack = Packet(ack_num=(self.expct_seq_num-1) % 65536, flags=Packet.ACK_flag)
+                            self.send_packet(ack, addr)
+                            print(f"{datetime.datetime.now()} -- sending last ack nr for {self.expct_seq_num-1}")
+                            
+                            # Update the last ACK sent
+                            last_ack_sent = (self.expct_seq_num-1) % 65536
+                        else:
+                            print(f"{datetime.datetime.now()} -- NOT sending duplicate ACK for {self.expct_seq_num-1} (already sent)")
