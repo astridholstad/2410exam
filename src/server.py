@@ -10,6 +10,7 @@ class Server(drtp):
     This will be used to initialze the reciever with a window size 
     DRTP implementation of the server (the reviecer of the file)
     The server need to handle ip, port, sliding window, file data, discarded sequence numbers. 
+    
     """
     def __init__(self, ip, port, window_size=15, discarded_seq=None):
         """
