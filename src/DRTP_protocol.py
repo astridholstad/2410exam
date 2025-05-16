@@ -10,7 +10,7 @@ class drtp():
     """
     def __init__(self, ip, port):
         """
-        Constructor for the protocol, ip and port using a socket setup
+        Constructor for the protocol, it takes in ip and port parameter
         """
         self.ip = ip
         self.port = port
@@ -21,7 +21,8 @@ class drtp():
         
          # Create new socket with improved options
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) #HHEEELLO
+        
 
         #the current connection state
         self.connected = False
@@ -32,18 +33,22 @@ class drtp():
     def send_packet(self, packet, dest_addr):
         """
         This method sends a packet to a spesified destination address
+        uses convertion by calling the convert_to_b() method
+        The converted packet to bytes is being sendt to a dest address
+
         """   
         try:
             packet_bytes =  packet.convert_to_b()
             self.socket.sendto(packet_bytes, dest_addr)
-        except Exception as e:
+        except Exception as e: #error handling
             print(f"Error sending packet: {e}")
 
     def receive_packet(self):
         """
         This method receives a packet from the socket
-        uses a try catch method, returns the packet and address
-        If timeout, it returns none
+        The method, returns the packet converted back to a packet from bytes
+        and the source address 
+        
         """
         try:
             data, addr = self.socket.recvfrom(1024) #buffersize is 1024 bytes
@@ -52,7 +57,7 @@ class drtp():
                 return packet, addr 
             return None, None
         except socket.timeout:
-            # Make sure this explicitly re-raises the timeout exception
+            #re-raises the timeout exception
             raise
         except BlockingIOError:
             # This will be raised when using non-blocking sockets and no data is available
@@ -64,6 +69,9 @@ class drtp():
     def close_socket(self):
         """
         This method closes the socket after a connection
+        It checks if the socket exists and is inizialised 
+        Sets connection to false to indicate no connection. 
+        it make shure the socket is accually closed by set it to None
         """    
         if hasattr(self, 'socket') and self.socket:
             try:
@@ -76,10 +84,3 @@ class drtp():
                 print("Socket properly closed")
             except Exception as e:
                 print(f"Error closing socket: {e}")
-
-
-
-
-
-        
-    
