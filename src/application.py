@@ -11,7 +11,7 @@ def parse_args():
     """
     This method will parse command line arguments 
     Using argparse module
-    will return the arguments for the main method to use 
+    will return the user arguments for the main method to use 
     """
     parser = argparse.ArgumentParser(description="DRTP File Transfer Application")
 
@@ -25,7 +25,7 @@ def parse_args():
     parser.add_argument('-w', '--window', type=int, default=3, help='Sliding window size')
 
     #command line args for server spesific functionality 
-    parser.add_argument('-d', '--discard', type=int, help='Sequence number to discard (Test)')
+    parser.add_argument('-d', '--discard', type=int, help='Sequence number to discard')
 
     #common command line args 
     parser.add_argument('-i', '--ip', type=str, default='127.0.0.1', help='IP address')
@@ -34,10 +34,10 @@ def parse_args():
     args = parser.parse_args()
 
     # need to validate args here 
-    if args.port < 1024 or args.port > 65535:
+    if args.port < 1024 or args.port > 65535: #valid port numbers 
         parser.error("Port must be in the range [1024, 65535]")
 
-    if args.client and not args.file:
+    if args.client and not args.file: 
         parser.error("Client mode requiers -f for file ")
     return args       
 
@@ -45,8 +45,8 @@ def main():
     """
     Main method for this application 
     """  
-    args = parse_args()
-    server = None
+    args = parse_args() #get user inputs
+    server = None 
     client = None
 
     try:
@@ -68,7 +68,7 @@ def main():
             client = Client(args.ip, args.port, args.window)
             print(f"Client connecting to server at {args.ip}:{args.port}")
             
-            # Send the file - this should include the handshake, data transfer and teardown
+            # Send the file,
             success = client.send_file(args.file)
             if success:
                 print("File transmission complete")
@@ -80,7 +80,7 @@ def main():
     except Exception as e:
         print(f"Error: {e}")
     finally:
-        # Clean up resources properly
+        # Clean up socket properly
         if server:
             server.close_socket()
             print("Server socket closed")
