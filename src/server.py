@@ -103,7 +103,8 @@ class Server(drtp):
         This method recieve a file from the client
         """        
         #check firstly if we have a connection est.
-        print("debug:starting revieve file method")
+
+        print("starting revieve file method")#for debug
         if not self.connected:
             client_addr = self.wait_for_handshake()
             if not client_addr:
@@ -123,7 +124,9 @@ class Server(drtp):
         
         with open(file_name, 'wb') as file:
             print("File opened, waiting for data")
+            
             while self.connected: #while connection is est..
+                used_time = time.time() - start_time
                 print("Waiting for packet...")  # Debug
                 packet, addr = super().receive_packet()
                 print(f"Received packet: {packet}, from {addr}")
@@ -138,7 +141,7 @@ class Server(drtp):
                     print("FIN ACK is sent")
 
                     #calculate throughput and display it
-                    used_time = time.time() - start_time
+                    #used_time = time.time() - start_time
                     throughput = (tot_bytes * 8) / (used_time * 1000000)
                     print(f"The throughput is: {throughput:.2f} Mbps")
                     print("Connection closes")
