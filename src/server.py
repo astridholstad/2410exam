@@ -189,7 +189,7 @@ class Server(drtp):
                         # Buffer the packet
                         self.buffer[packet.seq_num] = packet.data
                         
-                        # Only send the ACK if we haven't already sent one for this sequence number
+                        #only send the ACK if we haven't already sent one for this sequence number
                         if (self.expct_seq_num-1) % 65536 != last_ack_sent:
                             # Send duplicate ACK for last in-order packet
                             ack = Packet(ack_num=(self.expct_seq_num-1) % 65536, flags=Packet.ACK_flag)
