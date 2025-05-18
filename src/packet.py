@@ -22,7 +22,6 @@ class Packet:
         """
         This method is a constuctor. Help from safiquls github repo.
         this is a packet with the needed headers and data. 
-        as i am sending in self in the methods below, i am simply reffering to the contructors (pyhton syntax).
         """
         self.seq_num = seq_num 
         self.ack_num = ack_num

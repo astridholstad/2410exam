@@ -23,7 +23,6 @@ class Server(drtp):
         self.buffer = {} #buffer to store out of order data
         self.discarded_seq = discarded_seq
         self.discard_done = False # flag that is T/F to check if discard have been done.
-
         #bind the socket door to the address
         self.socket.bind((ip, port))
 
@@ -41,7 +40,7 @@ class Server(drtp):
         
         # Set a longer timeout for waiting for clients
         original_timeout = self.socket.gettimeout()
-        self.socket.settimeout(30.0)  # 30 seconds for initial connection
+        #self.socket.settimeout(30.0)  # 30 seconds for initial connection
         
         try:
             while True:
@@ -56,17 +55,17 @@ class Server(drtp):
                         syn_ack = Packet(seq_num=0, ack_num=0, flags=Packet.SYN_flag | Packet.ACK_flag, recv_window=self.recv_window)
                         syn_ack_bytes = syn_ack.convert_to_b()
                         
-                        # Send SYN-ACK multiple times to increase reliability
+                        # Send SYN-ACK multiple times for reliability
                         for _ in range(3):
                             self.socket.sendto(syn_ack_bytes, client_addr)
-                            time.sleep(0.1)  # Brief delay between sends
+                            time.sleep(0.1)  #delay between sends
                         
                         print(f"SYN-ACK is sent to {client_addr}")
                         
                         # Wait for ACK with reasonable timeout
                         self.socket.settimeout(5.0)
                         ack_received = False
-                        
+                        #this is a for loop for trying 5 times waiting for ack. 
                         for attempt in range(5):
                             try:
                                 ack_packet, ack_addr = self.receive_packet()
@@ -88,8 +87,7 @@ class Server(drtp):
                         
                         if not ack_received:
                             print("Failed to receive ACK, waiting for new connection...")
-                except socket.timeout:
-                    print("Timeout waiting for connection, still listening...")
+                #error handling
                 except Exception as e:
                     print(f"Error in handshake: {e}")
         except KeyboardInterrupt:
@@ -151,10 +149,10 @@ class Server(drtp):
                 #we have now recieved the data, and now we need to process it
                 elif packet:
 
-                    #FOR TESTING PURPOSES: check if we should discard the packet
+                    #this is for checking if we should discard the packet, and then discarding it 
                     if self.discarded_seq and packet.seq_num == self.discarded_seq and not self.discard_done:
-                        print(f"{datetime.datetime.now()} -- Discarding packet: {packet.seq_num} (test)")
-                        self.discard_done = True #set flag to true
+                        print(f"{datetime.datetime.now()} -- Discarding packet: {packet.seq_num} ")
+                        self.discard_done = True #set discard flag to true
                         continue
 
                     #now we prosess the in- order packets
@@ -166,7 +164,7 @@ class Server(drtp):
                             file.write(packet.data)
                             tot_bytes += len(packet.data)
 
-                        #send ack
+                        #send ack for a recived packet
                         ack = Packet(ack_num=self.expct_seq_num % 65536, flags=Packet.ACK_flag)
                         self.send_packet(ack, addr)
                         print(f"{datetime.datetime.now()} -- sending ack for the recieved {self.expct_seq_num}")
@@ -182,7 +180,7 @@ class Server(drtp):
                             data = self.buffer.pop(self.expct_seq_num)
                             file.write(data)
                             tot_bytes += len(data)
-                            self.expct_seq_num += 1 # and add
+                            self.expct_seq_num += 1 # and add on 1 to the next expected sequence number 
 
                     #out of order packets
                     elif packet.seq_num > self.expct_seq_num % 65536:
@@ -196,8 +194,8 @@ class Server(drtp):
                             ack = Packet(ack_num=(self.expct_seq_num-1) % 65536, flags=Packet.ACK_flag)
                             self.send_packet(ack, addr)
                             print(f"{datetime.datetime.now()} -- sending last ack nr for {self.expct_seq_num-1}")
-                            
+                
                             # Update the last ACK sent
                             last_ack_sent = (self.expct_seq_num-1) % 65536
                         else:
-                            print(f"{datetime.datetime.now()} -- {self.expct_seq_num-1} (already sent)")
+                            print(f"{datetime.datetime.now()} -- ack for {self.expct_seq_num-1} (already sent)")
