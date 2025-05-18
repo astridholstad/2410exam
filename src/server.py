@@ -182,20 +182,21 @@ class Server(drtp):
                             tot_bytes += len(data)
                             self.expct_seq_num += 1 # and add on 1 to the next expected sequence number 
 
-                    #out of order packets
+                    # Out of order packets
+                
                     elif packet.seq_num > self.expct_seq_num % 65536:
-                        print(f"{datetime.datetime.now()}  -- Out of order packcet: {packet.seq_num} is received. Expecting: {self.expct_seq_num}")
-                        #now buffer the packet
+                        print(f"{datetime.datetime.now()} -- out-of-order packet {packet.seq_num} is received")
+                        # Buffer the packet
                         self.buffer[packet.seq_num] = packet.data
                         
                         # Only send the ACK if we haven't already sent one for this sequence number
                         if (self.expct_seq_num-1) % 65536 != last_ack_sent:
-                            #send ack for last in order packet
+                            # Send duplicate ACK for last in-order packet
                             ack = Packet(ack_num=(self.expct_seq_num-1) % 65536, flags=Packet.ACK_flag)
                             self.send_packet(ack, addr)
-                            print(f"{datetime.datetime.now()} -- sending last ack nr for {self.expct_seq_num-1}")
-                
+                            print(f"{datetime.datetime.now()} -- sending ack for the received {self.expct_seq_num-1}")
+                            
                             # Update the last ACK sent
                             last_ack_sent = (self.expct_seq_num-1) % 65536
-                        else:
-                            print(f"{datetime.datetime.now()} -- ack for {self.expct_seq_num-1} (already sent)")
+                       
+                                        
