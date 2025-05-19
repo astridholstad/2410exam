@@ -1,4 +1,3 @@
-#common (core) functionality 
 import socket
 import time
 import os
@@ -14,14 +13,14 @@ class drtp():
         """
         self.ip = ip
         self.port = port
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) #note: using sock.dgram which is udp. will build my application on top of this, more on this later.
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) #note: using sock.dgram which is udp. 
         self.timeout = 0.4 #default 400 ms timeout, will use this for packet loss 
         self.socket.settimeout(self.timeout)
 
         
          # Create new socket with improved options
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) #HHEEELLO
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         
 
         #the current connection state

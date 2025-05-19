@@ -1,6 +1,3 @@
-#main entry point in this appication 
-#command line parsing 
-
 import argparse
 import sys
 import os
@@ -87,8 +84,6 @@ def main():
         if client:
             client.close_socket() 
             print("Client socket closed")
-
-
 
 if __name__ == "__main__":
     main()

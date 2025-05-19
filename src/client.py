@@ -79,10 +79,10 @@ class Client(drtp):
                         print(f"Server at {self.server_addr[0]}:{self.server_addr[1]} actively refused connection")
                         return False
                     
-                # Increment attempts and resend SYN
+                #increment attempts and resend SYN
                 attempts += 1
                 if attempts < max_attempts:
-                    print(f"Retrying handshake (attempt {attempts}/{max_attempts})") #was stuck on this problem for a while. I understand this is messy, but i dont dare to remove/rewrite it. it works. 
+                    print(f"Retrying handshake (attempt {attempts}/{max_attempts})") #timeout if server is not responding 
                     self.send_packet(syn_packet, self.server_addr)
                 else:
                     print(f"Server at {self.server_addr[0]}:{self.server_addr[1]} is not responding after {max_attempts} attempts")
@@ -123,8 +123,6 @@ class Client(drtp):
         the sliding window is maintained based on the window size.
         Tracks the (not acked) packets in flight
         Handles timeout and packet transmission
-
-
         """    
         #Read first chunk of data
         data = file.read(992)
@@ -230,7 +228,7 @@ class Client(drtp):
                 pass
             except socket.error as e:
                 if e.errno == 35:  # Resource temporarily unavailable
-                    # This is normal with non-blocking sockets, don't print an error
+                    #this is normal with non-blocking sockets, so i print nothing here. Help from claude.ai
                     pass
                 else:
                     print(f"Socket error: {e}")
@@ -253,11 +251,10 @@ class Client(drtp):
             self.send_packet(fin_packet, self.server_addr)
             print("FIN is sent")
 
-            #Check if FIN-ACK is recv
 
             # Check if FIN-ACK is received
             attempts = 0
-            while attempts < 5:  # Try 5 times
+            while attempts < 5:  # Try 5 times, error handling
                 packet, _ = super().receive_packet()
                 if packet and packet.check_fin() and packet.check_ack():
                     print("FIN ACK packet is received")

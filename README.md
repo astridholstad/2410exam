@@ -1,20 +1,11 @@
-# 2410exam
-* I have chosen object-oriented programming for this task as this assignment has clear compoments.
-* OOP help me organize my code into smaller piecesm which are easier to maintain/bugfix. 
-* Both client/server need to maintain different states of sequence numbers (sliding windows), which for me comes naturally as class attibutes. 
+# Reliable Transport Protocol (DRTP)  - Canidate 177
 
 
 
-python3 application.py -s -i 127.0.0.1 -p 8080
+* To run the server in mininet: python3 application.py -s -i 10.0.1.2 -p 8080
 
-python3 application.py -c -f iceland-safiqul.jpg -i 127.0.0.1 -p 8080 -w 5
+* To run the client in mininet: python3 application.py -c -f iceland-safiqul.jpg -i 10.0.1.2 -p 8080 
 
+* To check if the file transfer is correct: diff -s iceland-safiqul.jpg received_file
 
-
-
-
-
-
-
-to check if the file transfer is correct: diff iceland-safiqul.jpg received_file
 

@@ -1,5 +1,3 @@
-#error handling, validation
-#packet construction and parsing 
 import struct
 
 class Packet:
@@ -69,7 +67,7 @@ class Packet:
     @classmethod
     def convert_from_b(cls, packet_bytes):
         """
-        this class method decorator create a packet object from the received bytes. 
+        this class method create a packet object from the received bytes. 
         It is bound to the class and not the instance of the class. 
         It unpacks the header if there are any data.
         It also include error handling when recieving a header
